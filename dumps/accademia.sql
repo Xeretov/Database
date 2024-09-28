@@ -2,12 +2,13 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 16.4 (Debian 16.4-1.pgdg120+1)
--- Dumped by pg_dump version 16.4 (Debian 16.4-1.pgdg120+1)
+-- Dumped from database version 17.0 (Debian 17.0-1.pgdg120+1)
+-- Dumped by pg_dump version 17.0 (Debian 17.0-1.pgdg120+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -33,7 +34,7 @@ ALTER TYPE public.causaassenza OWNER TO postgres;
 -- Name: denaro; Type: DOMAIN; Schema: public; Owner: postgres
 --
 
-CREATE DOMAIN public.denaro AS real DEFAULT 0
+CREATE DOMAIN public.denaro AS real
 	CONSTRAINT denaro_check CHECK ((VALUE >= (0)::double precision));
 
 
@@ -73,7 +74,7 @@ ALTER TYPE public.lavoroprogetto OWNER TO postgres;
 -- Name: numeroore; Type: DOMAIN; Schema: public; Owner: postgres
 --
 
-CREATE DOMAIN public.numeroore AS integer DEFAULT 0
+CREATE DOMAIN public.numeroore AS integer
 	CONSTRAINT numeroore_check CHECK (((VALUE >= 0) AND (VALUE <= 8)));
 
 
@@ -83,7 +84,7 @@ ALTER DOMAIN public.numeroore OWNER TO postgres;
 -- Name: posinteger; Type: DOMAIN; Schema: public; Owner: postgres
 --
 
-CREATE DOMAIN public.posinteger AS integer DEFAULT 0
+CREATE DOMAIN public.posinteger AS integer
 	CONSTRAINT posinteger_check CHECK ((VALUE >= 0));
 
 
@@ -110,6 +111,66 @@ CREATE TYPE public.strutturato AS ENUM (
 
 
 ALTER TYPE public.strutturato OWNER TO postgres;
+
+--
+-- Name: v_attprogetto_data_wp_date(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.v_attprogetto_data_wp_date() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+declare
+  wpInizio date;
+  wpFine date;
+begin
+  select inizio into wpInizio 
+  from WP 
+  where wp.progetto = new.progetto and wp.id = new.wp;
+  if new.giorno < wpInizio then
+    raise exception 'Errore nell''inserimento o modifica nella tabella AttivitaProgetto (ennupla con valore per il campo id = %): il valore dell''attributo giorno e'' %, mentre il WP comincia il %', new.id, new.giorno, wpInizio;
+  end if;
+  select fine into wpFine 
+  from WP 
+  where wp.progetto = new.progetto and wp.id = new.wp;
+  if new.giorno > wpFine then
+    raise exception 'Errore nell''inserimento o modifica nella tabella AttivitaProgetto (ennupla con valore per il campo id = %): il valore dell''attributo giorno e'' %, mentre il WP termina il %', new.id, new.giorno, wpFine;
+  end if;
+  return new;
+end;
+$$;
+
+
+ALTER FUNCTION public.v_attprogetto_data_wp_date() OWNER TO postgres;
+
+--
+-- Name: v_wp_date_progetto_date(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.v_wp_date_progetto_date() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+declare
+  progettoInizio date;
+  progettoFine date;
+begin
+  select inizio into progettoInizio 
+  from Progetto 
+  where id = new.progetto;
+  if new.inizio < progettoInizio then
+    raise exception 'Il progetto comincia il %', progettoInizio;
+  end if;
+  select fine into progettoFine 
+  from Progetto 
+  where id = new.progetto;
+  if new.fine > progettoFine then
+    raise exception 'Il progetto finisce il %', progettoFine;
+  end if;
+  return new;
+end;
+$$;
+
+
+ALTER FUNCTION public.v_wp_date_progetto_date() OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -199,7 +260,7 @@ ALTER TABLE public.progetto OWNER TO postgres;
 CREATE TABLE public.wp (
     progetto public.posinteger NOT NULL,
     id public.posinteger NOT NULL,
-    nome public.stringam,
+    nome public.stringam NOT NULL,
     inizio date NOT NULL,
     fine date NOT NULL,
     CONSTRAINT wp_check CHECK ((inizio < fine))
@@ -213,6 +274,17 @@ ALTER TABLE public.wp OWNER TO postgres;
 --
 
 COPY public.assenza (id, persona, tipo, giorno) FROM stdin;
+0	10	Malattia	2011-06-01
+1	10	Malattia	2011-06-02
+2	10	Malattia	2011-06-03
+3	10	Maternita	2011-06-04
+4	8	Malattia	2011-07-02
+5	19	Chiusura Universitaria	2013-06-29
+6	7	Malattia	2012-12-07
+7	0	Maternita	2013-10-27
+8	17	Chiusura Universitaria	2011-08-15
+9	15	Maternita	2010-12-12
+10	0	Malattia	2012-04-18
 \.
 
 
@@ -221,6 +293,23 @@ COPY public.assenza (id, persona, tipo, giorno) FROM stdin;
 --
 
 COPY public.attivitanonprogettuale (id, persona, tipo, giorno, oredurata) FROM stdin;
+0	8	Incontro Dipartimentale	2011-06-01	4
+1	8	Didattica	2011-03-15	8
+2	8	Incontro Dipartimentale	2011-06-15	4
+3	2	Didattica	2014-04-01	4
+4	2	Didattica	2014-04-03	4
+5	1	Didattica	2014-04-03	8
+6	4	Incontro Accademico	2012-11-25	7
+7	7	Missione	2013-07-07	3
+8	5	Altro	2012-12-15	6
+9	0	Didattica	2012-04-18	4
+10	6	Didattica	2011-05-07	7
+11	21	Didattica	2020-05-15	4
+12	21	Ricerca	2020-05-17	3
+13	22	Incontro Dipartimentale	2021-06-21	4
+14	22	Missione	2021-06-22	5
+15	21	Incontro Dipartimentale	2020-07-10	4
+16	21	Didattica	2020-07-11	3
 \.
 
 
@@ -229,6 +318,23 @@ COPY public.attivitanonprogettuale (id, persona, tipo, giorno, oredurata) FROM s
 --
 
 COPY public.attivitaprogetto (id, persona, progetto, wp, giorno, tipo, oredurata) FROM stdin;
+0	0	1	0	2012-04-15	Ricerca e Sviluppo	8
+1	0	1	0	2012-04-16	Ricerca e Sviluppo	8
+2	0	1	0	2012-04-17	Ricerca e Sviluppo	8
+3	0	1	0	2012-04-18	Ricerca e Sviluppo	8
+4	8	1	2	2013-03-15	Dimostrazione	8
+5	10	1	0	2012-06-03	Ricerca e Sviluppo	8
+6	2	1	1	2012-04-22	Dimostrazione	7
+7	4	3	1	2013-01-19	Management	6
+8	11	3	2	2014-02-15	Altro	5
+9	0	3	2	2014-03-08	Ricerca e Sviluppo	6
+10	4	2	1	2000-01-19	Management	2
+11	21	5	0	2020-05-15	Ricerca e Sviluppo	8
+12	21	5	0	2020-05-16	Ricerca e Sviluppo	8
+13	22	6	0	2021-06-20	Management	6
+14	22	6	0	2021-06-21	Ricerca e Sviluppo	7
+15	21	5	0	2020-07-10	Dimostrazione	6
+16	21	5	0	2020-07-11	Management	8
 \.
 
 
@@ -237,6 +343,29 @@ COPY public.attivitaprogetto (id, persona, progetto, wp, giorno, tipo, oredurata
 --
 
 COPY public.persona (id, nome, cognome, posizione, stipendio) FROM stdin;
+0	Anna	Bianchi	Ricercatore	45500.3
+1	Mario	Rossi	Ricercatore	35500
+2	Barbara	Burso	Ricercatore	40442.5
+3	Gino	Spada	Ricercatore	35870.9
+4	Aurora	Bianchi	Professore Associato	43500.5
+5	Guido	Spensierato	Professore Associato	38221
+6	Consolata	Ferrari	Professore Associato	29200.1
+7	Andrea	Verona	Professore Associato	39002.05
+8	Asia	Giordano	Professore Ordinario	45200.1
+9	Carlo	Zante	Professore Ordinario	40230
+10	Ginevra	Riva	Professore Ordinario	39955
+11	Davide	Quadro	Professore Ordinario	36922.1
+12	Dario	Basile	Ricercatore	42566
+13	Silvia	Donati	Professore Ordinario	38005
+14	Fiorella	Martino	Professore Associato	35544.5
+15	Leonardo	Vitali	Professore Ordinario	38779.8
+16	Paolo	Valentini	Professore Associato	39200
+17	Emilio	Greco	Professore Associato	42020
+18	Giulia	Costa	Ricercatore	40220
+19	Elisa	Longo	Professore Associato	39001
+20	Carla	Martinelli	Ricercatore	42030.2
+21	Luigi	Bello	Ricercatore	36000
+22	Marco	Gentile	Professore Ordinario	50000
 \.
 
 
@@ -245,6 +374,13 @@ COPY public.persona (id, nome, cognome, posizione, stipendio) FROM stdin;
 --
 
 COPY public.progetto (id, nome, inizio, fine, budget) FROM stdin;
+0	Artemide	2000-01-01	2002-12-31	255000
+1	Pegasus	2012-01-01	2014-12-31	330000
+2	WineSharing	1999-01-01	2003-12-31	998000
+3	Simap	2010-02-01	2014-03-17	158000
+4	DropDiscovery	2010-09-13	2013-01-20	99000
+5	Project Alpha	2020-01-01	2021-12-31	150000
+6	Project Beta	2021-01-01	2022-12-31	200000
 \.
 
 
@@ -253,6 +389,18 @@ COPY public.progetto (id, nome, inizio, fine, budget) FROM stdin;
 --
 
 COPY public.wp (progetto, id, nome, inizio, fine) FROM stdin;
+0	0	WP1	2000-01-01	2000-12-31
+0	1	WP2	2001-01-01	2001-12-31
+0	2	WP3	2002-01-01	2002-12-31
+1	0	WP1	2012-01-01	2012-12-31
+1	1	WP2	2012-01-01	2012-12-31
+1	2	WP3	2013-01-01	2013-12-31
+2	1	Main Activity	1999-01-01	2003-12-31
+3	0	State of the Art	2012-01-01	2012-12-31
+3	1	Main Research	2013-01-01	2013-12-31
+3	2	Dissemination	2014-01-01	2014-03-17
+5	0	WP1	2020-01-01	2020-12-31
+6	0	WP1	2021-01-01	2021-12-31
 \.
 
 
@@ -329,11 +477,25 @@ ALTER TABLE ONLY public.wp
 
 
 --
+-- Name: attivitaprogetto attprogetto_data_wp_date; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER attprogetto_data_wp_date BEFORE INSERT OR UPDATE ON public.attivitaprogetto FOR EACH ROW EXECUTE FUNCTION public.v_attprogetto_data_wp_date();
+
+
+--
+-- Name: wp wp_dates_within_project_date; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER wp_dates_within_project_date BEFORE INSERT OR UPDATE ON public.wp FOR EACH ROW EXECUTE FUNCTION public.v_wp_date_progetto_date();
+
+
+--
 -- Name: assenza assenza_persona_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.assenza
-    ADD CONSTRAINT assenza_persona_fkey FOREIGN KEY (persona) REFERENCES public.persona(id);
+    ADD CONSTRAINT assenza_persona_fkey FOREIGN KEY (persona) REFERENCES public.persona(id) DEFERRABLE;
 
 
 --
@@ -341,7 +503,7 @@ ALTER TABLE ONLY public.assenza
 --
 
 ALTER TABLE ONLY public.attivitanonprogettuale
-    ADD CONSTRAINT attivitanonprogettuale_persona_fkey FOREIGN KEY (persona) REFERENCES public.persona(id);
+    ADD CONSTRAINT attivitanonprogettuale_persona_fkey FOREIGN KEY (persona) REFERENCES public.persona(id) DEFERRABLE;
 
 
 --
@@ -349,7 +511,7 @@ ALTER TABLE ONLY public.attivitanonprogettuale
 --
 
 ALTER TABLE ONLY public.attivitaprogetto
-    ADD CONSTRAINT attivitaprogetto_persona_fkey FOREIGN KEY (persona) REFERENCES public.persona(id);
+    ADD CONSTRAINT attivitaprogetto_persona_fkey FOREIGN KEY (persona) REFERENCES public.persona(id) DEFERRABLE;
 
 
 --
@@ -357,7 +519,7 @@ ALTER TABLE ONLY public.attivitaprogetto
 --
 
 ALTER TABLE ONLY public.attivitaprogetto
-    ADD CONSTRAINT attivitaprogetto_progetto_wp_fkey FOREIGN KEY (progetto, wp) REFERENCES public.wp(progetto, id);
+    ADD CONSTRAINT attivitaprogetto_progetto_wp_fkey FOREIGN KEY (progetto, wp) REFERENCES public.wp(progetto, id) DEFERRABLE;
 
 
 --
@@ -365,7 +527,7 @@ ALTER TABLE ONLY public.attivitaprogetto
 --
 
 ALTER TABLE ONLY public.wp
-    ADD CONSTRAINT wp_progetto_fkey FOREIGN KEY (progetto) REFERENCES public.progetto(id);
+    ADD CONSTRAINT wp_progetto_fkey FOREIGN KEY (progetto) REFERENCES public.progetto(id) DEFERRABLE;
 
 
 --
