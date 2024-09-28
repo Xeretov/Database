@@ -1,0 +1,48 @@
+Docker e Postgres - Istruzioni di base
+
+0. Assicurarsi che i container siano nello stato "Running" con il comando 'docker ps -a'. Entrambi i container 'postgres_container' e 'pgadmin_container' devono mostrare lo status 'UP x minutes/hours'.
+
+
+1. Aprire una bash nel container postgres con il comando
+	docker exec -it postgres_container bash
+
+2. Aprire l'interfaccia da linea di comando di postgres col comando
+	psql -U postgres
+
+3. Connettersi al database 'accademia' creato in precedenza
+	\c accademia
+
+	deve essere visualizzato il messaggio 'You are now connected to database "accademia" as user "postgres"'.
+	e il prompt sul terminale deve essere 'accademia=#'
+
+4. Lavorare a piacimento sul db.
+
+5. Quando si è terminato, uscire da postgres con il comando '\q'
+	Il prompt sul terminale deve essere 'root@dc8aec56e051:/#' o simile
+
+6. Effettuare il dump del db su file
+	pg_dump -U postgres accademia > accademia.sql
+
+	Questo comando crea un file 'accademia.sql' nella directory corrente.
+
+7. Aprire un nuovo terminale (nell'host, NON nel container), posizionarsi nella cartella dove si vuole salvare il file di dump del database.
+
+8. Copiare il file di dump dal container all'host:
+
+	docker cp postgres_container:/accademia.sql .
+
+	ATTENZIONE: il punto alla fine del comando è il percorso verso il quale si vuole copiare il file, in questo caso la directory corrente.
+
+9. Per copiare un file di dump dall'host al container, basta copiare nella direzione opposta (in questo esempio, si copia dalla directory corrente alla directory '/data' nel container):
+
+	docker cp ./accademia.sql postgres_container:/data/
+
+
+10. Per ripristinare un database da un file di dump, eseguire il seguente comando (nel container):
+	psql accademia < accademia.sql
+
+	NOTA: un database con il nome 'accademia' deve già esistere.
+
+Per informazioni dettagliate sul dump e il restore di database, vedere la documentazione sul sito ufficiale di Postgres:
+
+https://www.postgresql.org/docs/current/backup-dump.html
