@@ -36,7 +36,7 @@ group by a.codice;
 -- voli?
 select l.nazione, count(distinct l2.nazione) as num_nazioni
 from luogoAeroporto l, luogoAeroporto l2, arrPart ap
-where l.aeroporto = ap.arrivo and l2.aeroporto = ap.partenza
+where l.aeroporto = ap.arrivo and l2.aeroporto = ap.partenza and l.nazione <> l2.nazione
 group by l.nazione;
 
 -- 7. Qual è la durata media dei voli che partono da ognuno degli aeroporti?
