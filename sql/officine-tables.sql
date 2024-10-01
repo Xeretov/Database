@@ -4,6 +4,8 @@ create domain CodFis as varchar(16);
 
 create domain PosInteger as integer check (value >= 0);
 
+create domain Targa as varchar(8);
+
 create type Indirizzo as (
     via varchar(30),
     civico varchar(5),
