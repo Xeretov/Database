@@ -16,7 +16,6 @@ create type Indirizzo as (
     cap varchar(5)
 );
 
-
 -- creazione dello schema relazionale
 
 create table Nazione (
@@ -104,7 +103,8 @@ create table Staff (
 create table Dipendente (
     staff CodFis not null,
     officina integer not null,
-    primary key (staff),domains_tablesa) references Officina(id)
+    primary key (staff),
+    foreign key (officina) references Officina(id),
 );
 
 create table Direttore (
