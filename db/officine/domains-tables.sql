@@ -2,56 +2,66 @@ begin transaction;
 
 -- creazione dei domini
 
-create domain StringaM as varchar(100);
+create domain String as varchar;
+
+create domain StringNotNull as varchar
+    check (value is not null);
+
+create domain Civico as varchar
+    check (value ~ '[0-9]+(/[a-z]+)?');
+
+create domain CAP as varchar
+    check (value ~ '[0-9]{5}' and value is not null);
 
 create domain CodFis as varchar(16);
 
-create domain PosInteger as integer check (value >= 0);
+create domain PosInteger as integer
+    check (value >= 0);
 
 create domain Targa as varchar(8);
 
 create type Indirizzo as (
-    via varchar(30),
-    civico varchar(5),
-    cap varchar(5)
+    via StringNotNull,
+    civico Civico,
+    cap CAP
 );
 
 -- creazione dello schema relazionale
 
 create table Nazione (
-    nome StringaM not null,
+    nome StringNotNull,
     primary key(nome)
 );
 
 create table Regione (
-    nome StringaM not null,
-    nazione StringaM not null,
+    nome StringNotNull,
+    nazione StringNotNull,
     primary key (nome, nazione),
     foreign key (nazione) references Nazione(nome)
 );
 
 create table Citta (
-    nome StringaM not null,
-    regione StringaM not null,
-    nazione StringaM not null,
+    nome StringNotNull,
+    regione StringNotNull,
+    nazione StringNotNull,
     primary key (nome, regione),
     foreign key (regione,nazione) references Regione(nome, nazione)
 );
 
 create table Marca (
-    nome StringaM not null,
+    nome StringNotNull,
     primary key (nome)
 );
 
 create table TipoVeicolo (
-    nome StringaM not null,
+    nome StringNotNull,
     primary key (nome)
 );
 
 create table Modello (
-    nome StringaM not null,
-    marca StringaM not null,
-    tipoveicolo StringaM not null,
+    nome StringNotNull,
+    marca StringNotNull,
+    tipoveicolo StringNotNull,
     primary key (nome, marca),
     foreign key (marca) references Marca(nome),
     foreign key (tipoveicolo) references TipoVeicolo(nome)
@@ -60,8 +70,8 @@ create table Modello (
 create table Veicolo (
     targa Targa not null,
     immatricolazione integer not null,
-    cliente StringaM not null,
-    modello StringaM not null,
+    cliente StringNotNull,
+    modello StringNotNull,
     primary key (targa),
     foreign key (modello) references Modello(nome, marca),
     foreign key (cliente) references Cliente(persona)
@@ -80,10 +90,10 @@ create table Riparazione (
 
 create table Persona (
     cf CodFis not null,
-    nome StringaM not null,
+    nome StringNotNull,
     indirizzo Indirizzo not null,
     telefono varchar(20) not null,
-    citta StringaM not null,
+    citta StringNotNull,
     primary key (cf),
     foreign key (citta) references Citta(nome, regione, nazione)
 );
@@ -125,10 +135,10 @@ create table Lavorare (
 
 create table Officina (
     id Integer not null,
-    nome StringaM not null,
+    nome StringNotNull,
     indirizzo Indirizzo not null,
     direttore CodFis not null,
-    citta StringaM not null,
+    citta StringNotNull,
     primary key (id),
     foreign key (direttore) references Direttore(staff),
     foreign key (citta) references Citta(nome, regione, nazione)
