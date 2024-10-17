@@ -24,15 +24,19 @@ Ogni progetto tipicamente include i seguenti componenti:
 
 1. Assicurarsi di avere PostgreSQL installato e in esecuzione.
 2. Creare un nuovo database per ogni progetto.
-3. Eseguire lo script `domains-tables.sql` per creare lo schema.
-4. Eseguire lo script `constraints.sql` per aggiungere vincoli e trigger aggiuntivi.
-5. Eseguire lo script `data.sql` per popolare le tabelle con i dati iniziali.
+3. Aggiungere `domains-tables.sql` nel database per creare lo schema.
+4. Aggiungere `constraints.sql` nel database per creare vincoli e trigger aggiuntivi.
+5. Aggiungere `data.sql` e `data_chatgpt_x.sql` per popolare le tabelle con i dati iniziali.
 6. È possibile quindi eseguire vari file di query per testare ed esplorare il database.
 
 ## Istruzioni per Docker e PostgreSQL
 
 
-0. Assicurarsi che i container siano nello stato "Running" con il comando 'docker ps -a'. Entrambi i container 'postgres_container' e 'pgadmin_container' devono mostrare lo status 'UP x minutes/hours'.
+0. Assicurarsi che i container siano nello stato "Running" con il comando
+    ```bash
+    docker ps -a
+    ```
+    Entrambi i container `postgres_container` e `pgadmin_container` devono mostrare lo status `UP x minutes/hours`.
 
 
 1. Aprire una bash nel container postgres con il comando
