@@ -17,7 +17,7 @@ Ogni progetto tipicamente include i seguenti componenti:
 - `domains-tables.sql`: Definisce i domini e le tabelle per lo schema del database.
 - `data.sql`: Contiene i dati iniziali per popolare le tabelle.
 - `constraints.sql`: Definisce vincoli e trigger aggiuntivi per il database.
-- `data_chatgpt_1.sql`: Dati aggiuntivi generati per scopi di test.
+- `data_chatgpt_x.sql`: Dati aggiuntivi generati per scopi di test.
 - Vari file SQL con query (es. `accademia5.sql`, `cielo1.sql`, ecc.)
 
 ## Configurazione e Utilizzo
