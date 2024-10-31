@@ -97,6 +97,10 @@ Per informazioni dettagliate sul dump e il restore di database, vedere la docume
 
 https://www.postgresql.org/docs/current/backup-dump.html
 
+Per informazioni sull'installazione di Postgres:
+
+https://bitbucket.org/mclab/postgresql/src/master/
+
 ## Panoramica dei Progetti
 
 ### Accademia
